@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Amplify, generateClient } from "aws-amplify";
+import { Amplify } from "aws-amplify";
 import { withAuthenticator } from '@aws-amplify/ui-react';
 import awsExports from "./aws-exports";
 import { getGame, listHighScores } from "./graphql/queries";
@@ -27,6 +27,7 @@ function App() {
   });
 
   const [highScores, setHighScores] = useState([]);
+  const [isHorizontal, setIsHorizontal] = useState(true); // Steuert die Platzierungsrichtung
   const [activeTab, setActiveTab] = useState("game"); // Tab-Steuerung
 
   useEffect(() => {
@@ -96,6 +97,43 @@ function App() {
     }
   };
 
+  const placeShip = (row, col) => {
+    const newGrid = [...gameState.playerGrid];
+    const ship = shipsToPlace[gameState.currentShipIndex];
+
+    // Überprüfen, ob das Schiff auf das Spielfeld passt und kein anderes Schiff da ist
+    for (let i = 0; i < ship.length; i++) {
+      if (isHorizontal && (col + i >= newGrid[row].length || newGrid[row][col + i].hasShip)) return;
+      if (!isHorizontal && (row + i >= newGrid.length || newGrid[row + i][col].hasShip)) return;
+    }
+
+    // Platziere das Schiff
+    for (let i = 0; i < ship.length; i++) {
+      if (isHorizontal) {
+        newGrid[row][col + i] = { ...newGrid[row][col + i], hasShip: true, color: ship.color };
+      } else {
+        newGrid[row + i][col] = { ...newGrid[row + i][col], hasShip: true, color: ship.color };
+      }
+    }
+
+    // Erhöhe den aktuellen Schiffindex, um das nächste Schiff zu platzieren
+    const nextShipIndex = gameState.currentShipIndex + 1;
+    setGameState((prev) => ({
+      ...prev,
+      playerGrid: newGrid,
+      currentShipIndex: nextShipIndex,
+      isGameReady: nextShipIndex >= shipsToPlace.length,
+    }));
+  };
+
+  const togglePlacementDirection = () => {
+    setIsHorizontal((prev) => !prev);
+  };
+
+  const handleLongPress = () => {
+    setIsHorizontal((prev) => !prev);
+  };
+
   return (
     <div className="App">
       <h1>Schiffe Versenken - Semco-Edition</h1>
@@ -111,27 +149,28 @@ function App() {
       {activeTab === "game" && (
         <>
           {!gameState.isGameReady ? (
-          <>
-            <h2>Platziere deine Schiffe</h2>
-            <p>Aktuelles Schiff: Länge {shipsToPlace[gameState.currentShipIndex].length}</p>
-            <button onClick={togglePlacementDirection}>
-              {isHorizontal ? "Platzierung: Horizontal" : "Platzierung: Vertikal"}
-            </button>
-            <div className="grid">
-              {gameState.playerGrid.map((row, rowIndex) => (
-                <div key={rowIndex} className="row">
-                  {row.map((cell, colIndex) => (
-                    <div
-                      key={colIndex}
-                      className={`cell ${cell.hasShip ? "ship" : ""}`}
-                      style={{ backgroundColor: cell.hasShip ? cell.color : "lightblue" }}
-                      onClick={() => placeShip(rowIndex, colIndex)} // Platzierung basierend auf der Richtung
-                    ></div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </>
+            <>
+              <h2>Platziere deine Schiffe</h2>
+              <p>Aktuelles Schiff: Länge {shipsToPlace[gameState.currentShipIndex].length}</p>
+              <button onClick={togglePlacementDirection}>
+                {isHorizontal ? "Platzierung: Horizontal" : "Platzierung: Vertikal"}
+              </button>
+              <div className="grid">
+                {gameState.playerGrid.map((row, rowIndex) => (
+                  <div key={rowIndex} className="row">
+                    {row.map((cell, colIndex) => (
+                      <div
+                        key={colIndex}
+                        className={`cell ${cell.hasShip ? "ship" : ""}`}
+                        style={{ backgroundColor: cell.hasShip ? cell.color : "lightblue" }}
+                        onClick={() => placeShip(rowIndex, colIndex)} // Platzierung basierend auf der Richtung
+                        onTouchStart={() => setTimeout(handleLongPress, 500)} // 500ms langer Druck
+                      ></div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </>
           ) : (
             <>
               <h2>{gameState.winner ? `${gameState.winner} hat gewonnen!` : `Zug von: ${gameState.isMyTurn ? "Du" : "Gegner"}`}</h2>
@@ -204,41 +243,5 @@ const shipsToPlace = [
   { length: 3, placed: false, color: 'green' },
   { length: 2, placed: false, color: 'red' },
 ];
-
-const placeShip = (row, col) => {
-  const newGrid = [...gameState.playerGrid];
-  const ship = shipsToPlace[gameState.currentShipIndex];
-
-  // Überprüfen, ob das Schiff auf das Spielfeld passt und kein anderes Schiff da ist
-  for (let i = 0; i < ship.length; i++) {
-    if (isHorizontal && (col + i >= newGrid[row].length || newGrid[row][col + i].hasShip)) return;
-    if (!isHorizontal && (row + i >= newGrid.length || newGrid[row + i][col].hasShip)) return;
-  }
-
-  // Platziere das Schiff
-  for (let i = 0; i < ship.length; i++) {
-    if (isHorizontal) {
-      newGrid[row][col + i] = { ...newGrid[row][col + i], hasShip: true, color: ship.color };
-    } else {
-      newGrid[row + i][col] = { ...newGrid[row + i][col], hasShip: true, color: ship.color };
-    }
-  }
-
-  // Erhöhe den aktuellen Schiffindex, um das nächste Schiff zu platzieren
-  const nextShipIndex = gameState.currentShipIndex + 1;
-  setGameState((prev) => ({
-    ...prev,
-    playerGrid: newGrid,
-    currentShipIndex: nextShipIndex,
-    isGameReady: nextShipIndex >= shipsToPlace.length,
-  }));
-};
-
-
-const [isHorizontal, setIsHorizontal] = useState(true); // Steuert die Platzierungsrichtung
-
-const togglePlacementDirection = () => {
-  setIsHorizontal((prev) => !prev);
-};
 
 export default withAuthenticator(App);
