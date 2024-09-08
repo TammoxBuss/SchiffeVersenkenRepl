@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-schiffeversenken-dev-46938-authRole",
+      "UnauthRoleArn": "arn:aws:iam::122610480389:role/amplify-schiffeversenken-dev-46938-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::122610480389:role/amplify-schiffeversenken-dev-46938-authRole",
+      "Region": "eu-central-1",
+      "DeploymentBucketName": "amplify-schiffeversenken-dev-46938-deployment",
+      "UnauthRoleName": "amplify-schiffeversenken-dev-46938-unauthRole",
+      "StackName": "amplify-schiffeversenken-dev-46938",
+      "StackId": "arn:aws:cloudformation:eu-central-1:122610480389:stack/amplify-schiffeversenken-dev-46938/4dfb0370-6dbc-11ef-a054-0206c59b2e5f",
+      "AmplifyAppId": "d7m099iw23zjg"
+    },
+    "categories": {
+      "auth": {
+        "users": {}
+      }
+    }
+  }
+}
