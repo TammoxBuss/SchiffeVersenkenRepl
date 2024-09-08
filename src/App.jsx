@@ -1,5 +1,5 @@
 import { Amplify, generateClient } from "aws-amplify";
-import awsExports from "./aws-exports";
+import awsExports from "./aws-exports.js";
 import { withAuthenticator } from "@aws-amplify/ui-react";
 import { listHighScores } from "./graphql/queries";
 import { QRCodeSVG } from "qrcode.react";
