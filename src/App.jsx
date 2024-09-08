@@ -24,7 +24,7 @@ function App() {
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const [winner, setWinner] = useState("");
-  const [showQRCode, setShowQRCode] = useState(false);  // Neue State für QR-Code-Anzeige
+  const [showQRCode, setShowQRCode] = useState(false); 
 
   useEffect(() => {
     const uniqueId = Math.random().toString(36).substr(2, 9);
@@ -200,9 +200,9 @@ function App() {
 
 function createEmptyGrid() {
   const grid = [];
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 8; i++) {  // Anpassung auf 8x8
     const row = [];
-    for (let j = 0; j < 10; j++) {
+    for (let j = 0; j < 8; j++) {  // Anpassung auf 8x8
       row.push({ hit: false, hasShip: false });
     }
     grid.push(row);
