@@ -100,7 +100,15 @@ function App() {
     if (!gameState.isMyTurn || gameState.opponentGrid[row][col].hit || gameState.winner) return;
 
     const newGrid = [...gameState.opponentGrid];
-    newGrid[row][col].hit = true;
+    const cell = newGrid[row][col];
+
+    // Überprüfen, ob ein Schiff getroffen wurde und Farbe setzen
+    if (cell.hasShip) {
+      cell.hit = true;
+      cell.color = cell.color || shipsToPlace.find(ship => ship.length === cell.length)?.color; // Farbe des Schiffs setzen
+    } else {
+      cell.hit = true; // Setze das Feld als "verfehlt"
+    }
 
     try {
       await API.graphql(graphqlOperation(makeMove, { input: { gameId: gameState.gameId, playerId: gameState.playerId, row, col } }));
@@ -109,6 +117,7 @@ function App() {
       console.error("Error making move:", error);
     }
   };
+
 
   // Login- und Logout-Funktionen
   const signIn = async (username, password) => {
@@ -248,7 +257,8 @@ function App() {
                   {row.map((cell, colIndex) => (
                     <div
                       key={colIndex}
-                      className={`cell ${cell.hit ? "hit" : ""}`}
+                      className={`cell ${cell.hit ? (cell.hasShip ? 'hit-ship' : 'miss') : ''}`}
+                      style={{ backgroundColor: cell.hit && cell.hasShip ? cell.color : '' }}
                       onClick={() => handleMove(rowIndex, colIndex)}
                     ></div>
                   ))}

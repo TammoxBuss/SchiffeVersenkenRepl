@@ -24,6 +24,14 @@
   cursor: pointer;
 }
 
+.hit-ship {
+  /* Farbe wird jetzt dynamisch von der Schiffsfarbe gesetzt */
+}
+
+.miss {
+  background-color: lightgray; /* Farbe für Fehlschüsse */
+}
+
 .cell.hit {
   background-color: red;
 }
