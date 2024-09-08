@@ -46,3 +46,16 @@ export const deleteHighScore = /* GraphQL */ `
     }
   }
 `;
+
+export const makeMove = /* GraphQL */ `
+  mutation MakeMove($input: CreateMoveInput!) {
+    makeMove(input: $input) {
+      id
+      playerId
+      gameId
+      row
+      col
+    }
+  }
+`;
+

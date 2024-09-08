@@ -43,3 +43,13 @@ export const onDeleteHighScore = /* GraphQL */ `
     }
   }
 `;
+export const onMoveMade = /* GraphQL */ `
+  subscription OnMoveMade($gameId: ID!) {
+    onMoveMade(gameId: $gameId) {
+      id
+      playerId
+      row
+      col
+    }
+  }
+`;

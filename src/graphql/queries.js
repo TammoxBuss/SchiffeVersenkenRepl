@@ -33,3 +33,18 @@ export const listHighScores = /* GraphQL */ `
     }
   }
 `;
+
+export const getGame = /* GraphQL */ `
+  query GetGame($id: ID!) {
+    getGame(id: $id) {
+      id
+      player1Id
+      player2Id
+      player1Grid
+      player2Grid
+      currentTurn
+      winner
+    }
+  }
+`;
+

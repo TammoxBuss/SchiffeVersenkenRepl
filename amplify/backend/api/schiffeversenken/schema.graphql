@@ -7,3 +7,43 @@ type HighScore @model {
   username: String!
   score: Int!
 }
+
+type Game @model {
+  id: ID!
+  player1Id: String!
+  player2Id: String!
+  player1Grid: AWSJSON
+  player2Grid: AWSJSON
+  currentTurn: Int
+  winner: String
+}
+
+type Move {
+  id: ID!
+  playerId: String!
+  gameId: ID!
+  row: Int!
+  col: Int!
+}
+
+type Subscription {
+  onMoveMade(gameId: ID!): Move
+    @aws_subscribe(mutations: ["makeMove"])
+}
+
+input CreateMoveInput {
+  gameId: ID!
+  playerId: String!
+  row: Int!
+  col: Int!
+}
+
+type Mutation {
+  makeMove(input: CreateMoveInput!): Move
+}
+
+type Query {
+  getGame(id: ID!): Game
+}
+
+
