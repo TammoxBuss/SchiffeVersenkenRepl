@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Amplify, generateClient } from "aws-amplify";
 import { withAuthenticator } from '@aws-amplify/ui-react';
 import awsExports from "./aws-exports";
@@ -7,9 +7,8 @@ import { createHighScore } from "./graphql/mutations";
 import { onMoveMade } from "./graphql/subscriptions";
 import { QRCodeSVG } from "qrcode.react";
 import "./App.css";
-import { BrowserRouter as Router, Route } from "react-router-dom";
+import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import Lobby from './Lobby';
-
 
 Amplify.configure(awsExports);
 
@@ -28,6 +27,7 @@ function App() {
   });
 
   const [highScores, setHighScores] = useState([]);
+  const [activeTab, setActiveTab] = useState("game"); // Tab-Steuerung
 
   useEffect(() => {
     fetchHighScores();
@@ -70,71 +70,12 @@ function App() {
     }
   };
 
-  const placeShip = (row, col, isHorizontal) => {
-    const newGrid = [...gameState.playerGrid];
-    const ship = shipsToPlace[gameState.currentShipIndex];
-
-    for (let i = 0; i < ship.length; i++) {
-      if (isHorizontal && newGrid[row][col + i].hasShip) return;
-      if (!isHorizontal && newGrid[row + i][col].hasShip) return;
-    }
-
-    for (let i = 0; i < ship.length; i++) {
-      if (isHorizontal) {
-        newGrid[row][col + i] = { ...newGrid[row][col + i], hasShip: true, color: ship.color };
-      } else {
-        newGrid[row + i][col] = { ...newGrid[row + i][col], hasShip: true, color: ship.color };
-      }
-    }
-
-    const nextShipIndex = gameState.currentShipIndex + 1;
-    setGameState((prev) => ({
-      ...prev,
-      playerGrid: newGrid,
-      currentShipIndex: nextShipIndex,
-      isGameReady: nextShipIndex >= shipsToPlace.length,
-    }));
-  };
-
-  const handleMove = async (row, col) => {
-    if (!gameState.isMyTurn || gameState.opponentGrid[row][col].hit || gameState.winner) return;
-
-    const newGrid = [...gameState.opponentGrid];
-    const cell = newGrid[row][col];
-
-    // Überprüfen, ob ein Schiff getroffen wurde und Farbe setzen
-    if (cell.hasShip) {
-      cell.hit = true;
-      cell.color = cell.color || shipsToPlace.find(ship => ship.length === cell.length)?.color; // Farbe des Schiffs setzen
-    } else {
-      cell.hit = true; // Setze das Feld als "verfehlt"
-    }
-
+  const fetchHighScores = async () => {
     try {
-      await API.graphql(graphqlOperation(makeMove, { input: { gameId: gameState.gameId, playerId: gameState.playerId, row, col } }));
-      setGameState((prev) => ({ ...prev, opponentGrid: newGrid, isMyTurn: false }));
+      const highScoreData = await API.graphql(graphqlOperation(listHighScores));
+      setHighScores(highScoreData.data.listHighScores.items);
     } catch (error) {
-      console.error("Error making move:", error);
-    }
-  };
-
-
-  // Login- und Logout-Funktionen
-  const signIn = async (username, password) => {
-    try {
-      await Auth.signIn(username, password);
-      // Erfolgshandling
-    } catch (error) {
-      console.error('Error signing in:', error);
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      await Auth.signOut();
-      // Erfolgshandling
-    } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error fetching high scores:", error);
     }
   };
 
@@ -154,131 +95,99 @@ function App() {
       console.error('Error saving game:', error);
     }
   };
-  
-  const fetchHighScores = async () => {
-    try {
-      const highScoreData = await API.graphql(graphqlOperation(listHighScores));
-      setHighScores(highScoreData.data.listHighScores.items);
-    } catch (error) {
-      console.error("Error fetching high scores:", error);
-    }
-  };
-
-  const submitHighScore = async (username, score) => {
-    try {
-      await API.graphql(graphqlOperation(createHighScore, { input: { username, score } }));
-      fetchHighScores(); // Update high scores after submission
-    } catch (error) {
-      console.error("Error submitting high score:", error);
-    }
-  };
 
   return (
     <div className="App">
       <h1>Schiffe Versenken - Semco-Edition</h1>
-      
-      <div>
-        <button onClick={() => signIn('testuser', 'password123')}>Login</button>
-        <button onClick={signOut}>Logout</button>
+
+      {/* Tabs */}
+      <div className="tabs">
+        <button onClick={() => setActiveTab("game")}>Spiel</button>
+        <button onClick={() => setActiveTab("qr")}>QR-Code</button>
+        <button onClick={() => setActiveTab("highscore")}>Highscores</button>
       </div>
-      
-      <button onClick={() => setGameState((prev) => ({ ...prev, showQRCode: !gameState.showQRCode }))}>
-        {gameState.showQRCode ? "Verstecke QR-Code" : "Zeige QR-Code"}
-      </button>
 
-      {gameState.showQRCode && (
-        <div>
-          <h2>Dein QR-Code:</h2>
-          <QRCodeSVG value={`https://main.d3f0agz7jxl6qm.amplifyapp.com/?playerId=${gameState.playerId}`} size={256} />
-        </div>
-      )}
-
-      <button onClick={saveGame}>Spiel speichern</button>
-
-
-      <Router>
-        <div className="App">
-          <h1>Schiffe Versenken - Semco-Edition</h1>
-
-          {/* Button zum Verlinken zur Lobby */}
-          <Link to="/lobby">
-            <button>Lobby betreten</button>
-          </Link>
-
-          {/* Dein bestehender Code für das Spiel */}
-
-          {/* Route für die Lobby */}
-          <Route path="/lobby" component={Lobby} />
-
-          {/* Andere Routen, falls vorhanden */}
-        </div>
-      </Router>
-      
-      {!gameState.isGameReady ? (
+      {/* Inhalt basierend auf dem aktiven Tab */}
+      {activeTab === "game" && (
         <>
-          <h2>Platziere deine Schiffe</h2>
-          <p>Aktuelles Schiff: Länge {shipsToPlace[gameState.currentShipIndex].length}</p>
-          <div className="grid">
-            {gameState.playerGrid.map((row, rowIndex) => (
-              <div key={rowIndex} className="row">
-                {row.map((cell, colIndex) => (
-                  <div
-                    key={colIndex}
-                    className={`cell ${cell.hasShip ? "ship" : ""}`}
-                    style={{ backgroundColor: cell.hasShip ? cell.color : "lightblue" }}
-                    onClick={() => placeShip(rowIndex, colIndex, true)}
-                  ></div>
+          {!gameState.isGameReady ? (
+            <>
+              <h2>Platziere deine Schiffe</h2>
+              <p>Aktuelles Schiff: Länge {shipsToPlace[gameState.currentShipIndex].length}</p>
+              <div className="grid">
+                {gameState.playerGrid.map((row, rowIndex) => (
+                  <div key={rowIndex} className="row">
+                    {row.map((cell, colIndex) => (
+                      <div
+                        key={colIndex}
+                        className={`cell ${cell.hasShip ? "ship" : ""}`}
+                        style={{ backgroundColor: cell.hasShip ? cell.color : "lightblue" }}
+                        onClick={() => placeShip(rowIndex, colIndex, true)}
+                      ></div>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <>
-          <h2>{gameState.winner ? `${gameState.winner} hat gewonnen!` : `Zug von: ${gameState.isMyTurn ? "Du" : "Gegner"}`}</h2>
-          <section className="grid-section">
-            <h2>Dein Spielfeld</h2>
-            <div className="grid">
-              {gameState.playerGrid.map((row, rowIndex) => (
-                <div key={rowIndex} className="row">
-                  {row.map((cell, colIndex) => (
-                    <div key={colIndex} className={`cell ${cell.hit ? "hit" : ""}`}></div>
+            </>
+          ) : (
+            <>
+              <h2>{gameState.winner ? `${gameState.winner} hat gewonnen!` : `Zug von: ${gameState.isMyTurn ? "Du" : "Gegner"}`}</h2>
+              <section className="grid-section">
+                <h2>Dein Spielfeld</h2>
+                <div className="grid">
+                  {gameState.playerGrid.map((row, rowIndex) => (
+                    <div key={rowIndex} className="row">
+                      {row.map((cell, colIndex) => (
+                        <div key={colIndex} className={`cell ${cell.hit ? "hit" : ""}`}></div>
+                      ))}
+                    </div>
                   ))}
                 </div>
-              ))}
-            </div>
-          </section>
+              </section>
 
-          <section className="grid-section">
-            <h2>Gegnerisches Spielfeld</h2>
-            <div className="grid">
-              {gameState.opponentGrid.map((row, rowIndex) => (
-                <div key={rowIndex} className="row">
-                  {row.map((cell, colIndex) => (
-                    <div
-                      key={colIndex}
-                      className={`cell ${cell.hit ? (cell.hasShip ? 'hit-ship' : 'miss') : ''}`}
-                      style={{ backgroundColor: cell.hit && cell.hasShip ? cell.color : '' }}
-                      onClick={() => handleMove(rowIndex, colIndex)}
-                    ></div>
+              <section className="grid-section">
+                <h2>Gegnerisches Spielfeld</h2>
+                <div className="grid">
+                  {gameState.opponentGrid.map((row, rowIndex) => (
+                    <div key={rowIndex} className="row">
+                      {row.map((cell, colIndex) => (
+                        <div
+                          key={colIndex}
+                          className={`cell ${cell.hit ? "hit" : ""}`}
+                          onClick={() => handleMove(rowIndex, colIndex)}
+                        ></div>
+                      ))}
+                    </div>
                   ))}
                 </div>
-              ))}
-            </div>
-          </section>
+              </section>
+            </>
+          )}
         </>
       )}
 
-      <section className="highscore-section">
-        <h2>Highscore Liste</h2>
-        <ul>
-          {highScores.map((score) => (
-            <li key={score.id}>
-              {score.username}: {score.score}
-            </li>
-          ))}
-        </ul>
-      </section>
+      {activeTab === "qr" && (
+        <div>
+          <h2>Dein QR-Code:</h2>
+          <button onClick={() => setGameState((prev) => ({ ...prev, showQRCode: !gameState.showQRCode }))}>
+            {gameState.showQRCode ? "Verstecke QR-Code" : "Zeige QR-Code"}
+          </button>
+          {gameState.showQRCode && <QRCodeSVG value={`https://main.d3f0agz7jxl6qm.amplifyapp.com/?playerId=${gameState.playerId}`} size={256} />}
+        </div>
+      )}
+
+      {activeTab === "highscore" && (
+        <section className="highscore-section">
+          <h2>Highscore Liste</h2>
+          <ul>
+            {highScores.map((score) => (
+              <li key={score.id}>
+                {score.username}: {score.score}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
