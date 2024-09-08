@@ -48,3 +48,32 @@ export const getGame = /* GraphQL */ `
   }
 `;
 
+// Example of queries and mutations
+
+export const listGames = /* GraphQL */ `
+  query ListGames {
+    listGames {
+      items {
+        id
+        player1Id
+        player2Id
+        currentTurn
+        winner
+      }
+    }
+  }
+`;
+
+export const createGame = /* GraphQL */ `
+  mutation CreateGame($input: CreateGameInput!) {
+    createGame(input: $input) {
+      id
+      player1Id
+      player2Id
+      currentTurn
+      winner
+    }
+  }
+`;
+
+

@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Amplify, generateClient } from "aws-amplify";
+import { withAuthenticator } from '@aws-amplify/ui-react';
 import awsExports from "./aws-exports";
 import { getGame, listHighScores } from "./graphql/queries";
 import { createHighScore } from "./graphql/mutations";
 import { onMoveMade } from "./graphql/subscriptions";
 import { QRCodeSVG } from "qrcode.react";
 import "./App.css";
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import Lobby from './Lobby';
+
 
 Amplify.configure(awsExports);
 
@@ -106,6 +110,42 @@ function App() {
     }
   };
 
+  // Login- und Logout-Funktionen
+  const signIn = async (username, password) => {
+    try {
+      await Auth.signIn(username, password);
+      // Erfolgshandling
+    } catch (error) {
+      console.error('Error signing in:', error);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await Auth.signOut();
+      // Erfolgshandling
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const saveGame = async () => {
+    const gameData = {
+      id: gameState.gameId,
+      player1Grid: JSON.stringify(gameState.playerGrid),
+      player2Grid: JSON.stringify(gameState.opponentGrid),
+      currentTurn: gameState.currentPlayer,
+      winner: gameState.winner
+    };
+
+    try {
+      await API.graphql(graphqlOperation(updateGame, { input: gameData }));
+      console.log("Game successfully saved");
+    } catch (error) {
+      console.error('Error saving game:', error);
+    }
+  };
+  
   const fetchHighScores = async () => {
     try {
       const highScoreData = await API.graphql(graphqlOperation(listHighScores));
@@ -127,7 +167,12 @@ function App() {
   return (
     <div className="App">
       <h1>Schiffe Versenken - Semco-Edition</h1>
-
+      
+      <div>
+        <button onClick={() => signIn('testuser', 'password123')}>Login</button>
+        <button onClick={signOut}>Logout</button>
+      </div>
+      
       <button onClick={() => setGameState((prev) => ({ ...prev, showQRCode: !gameState.showQRCode }))}>
         {gameState.showQRCode ? "Verstecke QR-Code" : "Zeige QR-Code"}
       </button>
@@ -139,6 +184,27 @@ function App() {
         </div>
       )}
 
+      <button onClick={saveGame}>Spiel speichern</button>
+
+
+      <Router>
+        <div className="App">
+          <h1>Schiffe Versenken - Semco-Edition</h1>
+
+          {/* Button zum Verlinken zur Lobby */}
+          <Link to="/lobby">
+            <button>Lobby betreten</button>
+          </Link>
+
+          {/* Dein bestehender Code für das Spiel */}
+
+          {/* Route für die Lobby */}
+          <Route path="/lobby" component={Lobby} />
+
+          {/* Andere Routen, falls vorhanden */}
+        </div>
+      </Router>
+      
       {!gameState.isGameReady ? (
         <>
           <h2>Platziere deine Schiffe</h2>
@@ -217,4 +283,4 @@ const shipsToPlace = [
   { length: 2, placed: false, color: 'red' },
 ];
 
-export default App;
+export default withAuthenticator(App);
