@@ -1,9 +1,19 @@
-import './App.css'
+import React from 'react';
 
-export default function App() {
+function App() {
   return (
-    <main>
-      React ⚛️ + Vite ⚡ + Replit
-    </main>
-  )
+    <div className="App">
+      <h1>Willkommen zu Schiffe Versenken - Semco-Piraten-Edition!</h1>
+      <p>Bereit für ein Spiel?</p>
+    </div>
+  );
 }
+
+
+
+
+
+
+
+
+export default App;
