@@ -1,10 +1,11 @@
 .App {
   text-align: center;
-  margin-top: 20px;
+  font-family: 'Pirata One', cursive;
 }
 
 .grid {
   display: inline-block;
+  margin: 20px;
 }
 
 .row {
@@ -16,8 +17,23 @@
   height: 30px;
   border: 1px solid black;
   background-color: lightblue;
+  cursor: pointer;
 }
 
 .cell.hit {
   background-color: red;
+}
+
+header {
+  background-color: #343a40;
+  color: white;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 36px;
+}
+
+h2, h3 {
+  margin: 10px 0;
 }
