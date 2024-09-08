@@ -12,6 +12,10 @@
   display: flex;
 }
 
+.cell.ship {
+  border: 1px solid white;
+}
+
 .cell {
   width: 30px;
   height: 30px;
