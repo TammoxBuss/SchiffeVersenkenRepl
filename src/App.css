@@ -1,2 +1,25 @@
-main {
+.App {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+.highscores, .qr-code-section {
+  margin: 20px 0;
+}
+
+.highscores ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.highscores li {
+  padding: 5px 0;
+  font-size: 1.2em;
 }
