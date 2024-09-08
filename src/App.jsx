@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Amplify, API, graphqlOperation } from 'aws-amplify';
-import { withAuthenticator } from '@aws-amplify/ui-react';
-import { listHighScores } from './graphql/queries';
-import awsExports from './aws-exports';
-import { QRCode } from 'qrcode.react';
-import './App.css'; // Optional: Für eigene Styles
+import { Amplify, generateClient } from "aws-amplify";
+import awsExports from "./aws-exports";
+import { withAuthenticator } from "@aws-amplify/ui-react";
+import { listHighScores } from "./graphql/queries";
+import { QRCodeSVG } from "qrcode.react";
+import "./App.css"; // Optional: Für eigene Styles
 
 Amplify.configure(awsExports);
 
 function App() {
   const [scores, setScores] = useState([]); // State für die Highscore-Liste
-  const [playerId, setPlayerId] = useState(''); // State für die einzigartige Spieler-ID
+  const [playerId, setPlayerId] = useState(""); // State für die einzigartige Spieler-ID
 
   // Funktion zum Abrufen der Highscores aus der API
   const fetchScores = async () => {
@@ -19,7 +18,7 @@ function App() {
       const scoreList = scoreData.data.listHighScores.items;
       setScores(scoreList);
     } catch (error) {
-      console.error('Fehler beim Abrufen der Highscores:', error);
+      console.error("Fehler beim Abrufen der Highscores:", error);
     }
   };
 
