@@ -122,7 +122,11 @@ function App() {
                         key={colIndex}
                         className={`cell ${cell.hasShip ? "ship" : ""}`}
                         style={{ backgroundColor: cell.hasShip ? cell.color : "lightblue" }}
-                        onClick={() => placeShip(rowIndex, colIndex, true)}
+                        onClick={() => placeShip(rowIndex, colIndex, true)} // Linksklick platziert horizontal
+                        onContextMenu={(e) => { // Rechtsklick platziert vertikal
+                          e.preventDefault();
+                          placeShip(rowIndex, colIndex, false);
+                        }}
                       ></div>
                     ))}
                   </div>
@@ -201,5 +205,34 @@ const shipsToPlace = [
   { length: 3, placed: false, color: 'green' },
   { length: 2, placed: false, color: 'red' },
 ];
+
+const placeShip = (row, col, isHorizontal) => {
+  const newGrid = [...gameState.playerGrid];
+  const ship = shipsToPlace[gameState.currentShipIndex];
+
+  // Überprüfen, ob das Schiff auf das Spielfeld passt und kein anderes Schiff da ist
+  for (let i = 0; i < ship.length; i++) {
+    if (isHorizontal && (col + i >= newGrid[row].length || newGrid[row][col + i].hasShip)) return;
+    if (!isHorizontal && (row + i >= newGrid.length || newGrid[row + i][col].hasShip)) return;
+  }
+
+  // Platziere das Schiff
+  for (let i = 0; i < ship.length; i++) {
+    if (isHorizontal) {
+      newGrid[row][col + i] = { ...newGrid[row][col + i], hasShip: true, color: ship.color };
+    } else {
+      newGrid[row + i][col] = { ...newGrid[row + i][col], hasShip: true, color: ship.color };
+    }
+  }
+
+  // Erhöhe den aktuellen Schiffindex, um das nächste Schiff zu platzieren
+  const nextShipIndex = gameState.currentShipIndex + 1;
+  setGameState((prev) => ({
+    ...prev,
+    playerGrid: newGrid,
+    currentShipIndex: nextShipIndex,
+    isGameReady: nextShipIndex >= shipsToPlace.length, // Sobald alle Schiffe platziert sind, ist das Spiel bereit
+  }));
+};
 
 export default withAuthenticator(App);
