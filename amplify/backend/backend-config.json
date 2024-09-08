@@ -38,7 +38,7 @@
         "socialProviders": [],
         "usernameAttributes": [],
         "verificationMechanisms": [
-          "PHONE_NUMBER"
+          "EMAIL"
         ]
       },
       "providerPlugin": "awscloudformation",

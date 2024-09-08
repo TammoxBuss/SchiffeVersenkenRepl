@@ -1,12 +1,10 @@
 {
   "version": "1",
   "cognitoConfig": {
-    "identityPoolName": "schiffeversenken",
-    "allowUnauthenticatedIdentities": true,
     "resourceNameTruncated": "schiff9a14391e",
     "userPoolName": "schiffeversenken",
     "autoVerifiedAttributes": [
-      "phone_number"
+      "email"
     ],
     "mfaConfiguration": "OFF",
     "mfaTypes": [
@@ -14,8 +12,8 @@
     ],
     "smsAuthenticationMessage": "Your authentication code is {####}",
     "smsVerificationMessage": "Dein Login-Code ist: {####}",
-    "emailVerificationSubject": "Your verification code",
-    "emailVerificationMessage": "Your verification code is {####}",
+    "emailVerificationSubject": "Semco Schiffe versenken Bestätigung",
+    "emailVerificationMessage": "Dein Code lautet {####}",
     "defaultPasswordPolicy": true,
     "passwordPolicyMinLength": "6",
     "passwordPolicyCharacters": [
@@ -37,9 +35,8 @@
     "userpoolClientSetAttributes": false,
     "sharedId": "9a14391e",
     "resourceName": "users",
-    "authSelections": "identityPoolAndUserPool",
+    "authSelections": "userPoolOnly",
     "useDefault": "manual",
-    "thirdPartyAuth": false,
     "userPoolGroups": false,
     "adminQueries": false,
     "triggers": {},
@@ -47,6 +44,25 @@
     "userPoolGroupList": [],
     "serviceName": "Cognito",
     "usernameCaseSensitive": false,
-    "useEnabledMfas": true
+    "useEnabledMfas": true,
+    "authRoleArn": {
+      "Fn::GetAtt": [
+        "AuthRole",
+        "Arn"
+      ]
+    },
+    "unauthRoleArn": {
+      "Fn::GetAtt": [
+        "UnauthRole",
+        "Arn"
+      ]
+    },
+    "breakCircularDependency": true,
+    "dependsOn": [],
+    "authProviders": [],
+    "parentStack": {
+      "Ref": "AWS::StackId"
+    },
+    "permissions": []
   }
-}
+} 
